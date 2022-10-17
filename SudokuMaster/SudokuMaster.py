@@ -1,5 +1,4 @@
 from multiprocessing import Value
-from tkinter.messagebox import showinfo
 import tabula
 import cv2 as cv
 import pyautogui
@@ -8,6 +7,19 @@ from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
 from PIL import ImageTk,Image
+from pytesseract import pytesseract
+
+path_to_tesseract = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+#Define path to image
+path_to_image = 'test.png'
+#Point tessaract_cmd to tessaract.exe
+pytesseract.tesseract_cmd = path_to_tesseract
+#Open image with PIL
+img = Image.open(path_to_image)
+#Extract text from image
+text = pytesseract.image_to_string(img)
+print(text)
+
 
 button1 = False
 button2 = False
