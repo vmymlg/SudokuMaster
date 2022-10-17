@@ -29,11 +29,12 @@ root.columnconfigure(1,weight=3)
 
 
 def mouse_pointer_1():
+    global button1
     button1 = True
-    print(button1)
     
 def mouse_pointer_2():
-    button2 = True
+    global button2
+    button2 = True  
 
 mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
 mouse_button_2 = ttk.Button(root,command=mouse_pointer_2,text="Bas-Droit")
@@ -46,18 +47,21 @@ mouse_button_1.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 mouse_button_2.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 
 def on_press(key):
+   global button1
+   global button2
    if button1:
        mouse_position = pyautogui.position()
-       point_hg_x = mouse_position(0)
-       point_hg_y = mouse_position(1)
-       label_pointer1.config()
-       root.label_pointer1.config(text=(str(point_hg_x)+str(point_hg_y)))
-       print(str(point_hg_y))
+       point_hg_x = mouse_position[0]
+       point_hg_y = mouse_position[1]
+       label_pointer1.config(text=( "Coordonnées:"+str(point_hg_x)+","+str(point_hg_y)))
+       button1 = False
+    
    elif button2:
        mouse_position = pyautogui.position()
-       point_bd_x = mouse_position(0)
-       point_bd_y = mouse_position(1)
-       root.label_pointer2.config(text = str(point_bd_x)+str(point_bd_y))
+       point_bd_x = mouse_position[0]
+       point_bd_y = mouse_position[1]
+       label_pointer2.config(text = "Coordonnées:"+str(point_bd_x)+","+str(point_bd_y))
+       button2 = False
        
 
 
