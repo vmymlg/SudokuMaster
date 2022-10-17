@@ -1,13 +1,13 @@
 from multiprocessing import Value
 from tkinter.messagebox import showinfo
-from tokenize import ContStr
-from turtle import window_height, window_width
 import tabula
 import cv2 as cv
 import pyautogui
 import tkinter as tk
+from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
+from PIL import ImageTk,Image
 
 button1 = False
 button2 = False
@@ -17,11 +17,11 @@ point_hg_x = 0
 point_hg_y = 0
 point_bd_x = 0
 point_bd_y = 0
-window_height = 600
-window_width = 400
+window_heights = 1000
+window_widths = 500
 root = tk.Tk()
 root.title('Sudoku Destroyer')
-root.geometry(str(window_height)+'x'+str(window_height)+'+50+50')
+root.geometry(str(window_heights)+'x'+str(window_heights)+'+50+50')
 root.resizable(False,False)
 root.iconbitmap('sudoku_icon.ico')
 
@@ -50,18 +50,31 @@ def start_screenshot():
         
 def create_screenshot():
    image = pyautogui.screenshot(region=(point_hg_x,point_hg_y,point_bd_x-point_hg_x,point_bd_y-point_hg_y))
+   image.save('test.png')
+   image = ImageTk.PhotoImage(Image.open('test.png'))
+   screen.config(image=image)
+   image_1 = Image.open('test.png').convert('RGB')
+   image_1.save('test.pdf')
+   extractdatafrompdf()
+   
+def extractdatafrompdf():
+    ext = tabula.read_pdf('test.pdf',pages ='1')
+    ext[0].to_csv("sudoku.csv")
 
+screen = ttk.Label()
 start_screen = ttk.Button(root,command=start_screenshot,text="Start Screenshot")
 mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
 mouse_button_2 = ttk.Button(root,command=mouse_pointer_2,text="Bas-Droit")
 label_pointer1 = ttk.Label(root,text="Pointeur haut-gauche tableau")
 label_pointer2 = ttk.Label(root,text="Pointeur bas-droit tableau")
 
+
 label_pointer1.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
 label_pointer2.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 mouse_button_1.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 mouse_button_2.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
+screen.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 def on_press(key):
    global button1
    global button2
