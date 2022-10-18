@@ -47,10 +47,11 @@ def start_screenshot():
     lines_list.clear()
     if start_haut and start_bas:
         if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
-            create_screenshot()
+            number_identifier()
+            
+            
         
-def create_screenshot():
-   print("Create_screenshot")
+def save_screenshot():
    image = pyautogui.screenshot(region=(point_hg_x,point_hg_y,point_bd_x-point_hg_x,point_bd_y-point_hg_y))
    image.save('test.png')
    image = ImageTk.PhotoImage(Image.open('test.png'))
@@ -92,13 +93,39 @@ def line_identifier():
     # On the original image
         cv.line(image,(x1,y1),(x2,y2),(0,255,0),2)
     # Maintain a simples lookup list for points
-        lines_list.append([(x1,y1),(x2,y2)])
+        lines_list.append([(x1+point_hg_x,y1+point_hg_y),(x2+point_hg_x,y2+point_hg_y)])
      
     # Save the result image
     cv.imwrite('detectedLines.png',image)
 
 def number_identifier():
-    stop =0
+    location_1 = pyautogui.locateOnScreen('1.png')
+    location_2 = pyautogui.locateOnScreen('2.png')
+    location_3 = pyautogui.locateOnScreen('3.png')
+    location_4 = pyautogui.locateOnScreen('4.png')
+    location_5 = pyautogui.locateOnScreen('5.png')
+    location_6 = pyautogui.locateOnScreen('6.png')
+    location_7 = pyautogui.locateOnScreen('7.png')
+    location_8 = pyautogui.locateOnScreen('8.png')
+    location_9 = pyautogui.locateOnScreen('9.png')
+    save_screenshot()
+    create_grid(location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9)
+
+def create_grid(l1,l2,l3,l4,l5,l6,l7,l8,l9):
+    for location in l1:
+        x,y = location
+        for line in lines_list:
+
+
+        
+    
+    
+
+    
+    
+
+
+
 screen = ttk.Label()
 start_screen = ttk.Button(root,command=start_screenshot,text="Start Screenshot")
 mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
@@ -114,7 +141,6 @@ mouse_button_2.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
 screen.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 
-print(text)
 def on_press(key):
    global button1
    global button2
