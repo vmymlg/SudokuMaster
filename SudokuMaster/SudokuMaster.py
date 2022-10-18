@@ -1,3 +1,4 @@
+from concurrent.futures.thread import _global_shutdown_lock
 import cv2 as cv
 import pyautogui
 import tkinter as tk
@@ -7,6 +8,16 @@ from pynput import keyboard
 from PIL import ImageTk,Image
 import numpy
 
+grid_sudoku = [[0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0]]
+cell_range = 0
 lines_list =[]
 button1 = False
 button2 = False
@@ -99,31 +110,72 @@ def line_identifier():
     cv.imwrite('detectedLines.png',image)
 
 def number_identifier():
-    location_1 = pyautogui.locateOnScreen('1.png')
-    location_2 = pyautogui.locateOnScreen('2.png')
-    location_3 = pyautogui.locateOnScreen('3.png')
-    location_4 = pyautogui.locateOnScreen('4.png')
-    location_5 = pyautogui.locateOnScreen('5.png')
-    location_6 = pyautogui.locateOnScreen('6.png')
-    location_7 = pyautogui.locateOnScreen('7.png')
-    location_8 = pyautogui.locateOnScreen('8.png')
-    location_9 = pyautogui.locateOnScreen('9.png')
+    location_1 = pyautogui.locateAllOnScreen('1.png')
+    location_2 = pyautogui.locateAllOnScreen('2.png')
+    location_3 = pyautogui.locateAllOnScreen('3.png')
+    location_4 = pyautogui.locateAllOnScreen('4.png')
+    location_5 = pyautogui.locateAllOnScreen('5.png')
+    location_6 = pyautogui.locateAllOnScreen('6.png')
+    location_7 = pyautogui.locateAllOnScreen('7.png')
+    location_8 = pyautogui.locateAllOnScreen('8.png')
+    location_9 = pyautogui.locateAllOnScreen('9.png')
+    location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
     save_screenshot()
-    create_grid(location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9)
+    find_point_info()
+    create_grid(location)
 
-def create_grid(l1,l2,l3,l4,l5,l6,l7,l8,l9):
-    for location in l1:
-        x,y = location
-        for line in lines_list:
+def find_point_info():
+    print("Debut find_point")
+    point_x_min = 10000
+    point_y_min = 10000
+    point_x_max = 0
+    point_y_max = 0
+    for line in lines_list:
+        (x1,y1),(x2,y2) = line
+        if x1<point_x_min : point_x_min = x1
+        if y1<point_y_min : point_y_min = y1
+        if x1>point_x_max : point_x_max = x1
+        if y1>point_y_max : point_y_max = y1
+        if x2<point_x_min : point_x_min = x2
+        if y2<point_y_min : point_y_min = y2
+        if x2>point_x_max : point_x_max = x2
+        if y2>point_y_max : point_y_max = y2
+    print("find point passe")
+    dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max)
+
+def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
+    global point_hg_x
+    global point_hg_y
+    global point_bd_x
+    global point_bd_y
+    global cell_range
+    point_hg_x = point_x_min
+    point_hg_y = point_y_min
+    point_bd_x = point_x_max
+    point_bd_y = point_y_max
+    cell_range = (point_x_max-point_x_min)/9
 
 
+
+def create_grid(location):
+    global grid_sudoku
+    print("Debut create_grid")
+    i=0
+    for loc in location:
+        i+=1
+        inserer_nombre_grid(loc,i)
         
     
-    
+    print(grid_sudoku)
 
-    
-    
-
+def inserer_nombre_grid(location,i):
+    global sudoku
+    for loc in location :
+        column = ((loc.left-point_hg_x)/cell_range)
+        row = ((loc.top-point_hg_y)/cell_range)
+        column = int(column)
+        row = int(row)
+        grid_sudoku[row][column] = i
 
 
 screen = ttk.Label()
