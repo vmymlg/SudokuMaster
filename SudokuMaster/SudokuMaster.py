@@ -1,12 +1,14 @@
-from concurrent.futures.thread import _global_shutdown_lock
 import cv2 as cv
 import pyautogui
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
+from pynput.keyboard import Key,Controller
 from PIL import ImageTk,Image
 import numpy
+import time
+from threading import Thread
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -59,6 +61,7 @@ def start_screenshot():
     if start_haut and start_bas:
         if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
             number_identifier()
+            solve()
             
             
         
@@ -72,42 +75,19 @@ def save_screenshot():
    
 
 #Attention
-#Vol complet de la fonction
+#Inspiration:
 #https://www.geeksforgeeks.org/line-detection-python-opencv-houghline-method/
 def line_identifier():
-    print("Line_identifier")
-    image = cv.imread('test.png')
- 
-    # Convert image to grayscale
-    gray = cv.cvtColor(image,cv.COLOR_BGR2GRAY)
- 
-    # Use canny edge detection
-    edges = cv.Canny(gray,50,150,apertureSize=3)
- 
-    # Apply HoughLinesP method to
-    # to directly obtain line end points
     global lines_list
-    lines = cv.HoughLinesP(
-            edges, # Input edge image
-            1, # Distance resolution in pixels
-            numpy.pi/180, # Angle resolution in radians
-            threshold=100, # Min number of votes for valid line
-            minLineLength=5, # Min allowed length of line
-            maxLineGap=10 # Max allowed gap between line for joining them
-            )
- 
-    # Iterate over points
-    for points in lines:
-      # Extracted points nested in the list
+    image = cv.imread('test.png')
+    bordure = cv.Canny(image,100,200,apertureSize=3)
+    lignes = cv.HoughLinesP(bordure, 1, numpy.pi/180, threshold=100, minLineLength=50, maxLineGap=100)
+
+    for points in lignes:
         x1,y1,x2,y2=points[0]
-    # Draw the lines joing the points
-    # On the original image
-        cv.line(image,(x1,y1),(x2,y2),(0,255,0),2)
-    # Maintain a simples lookup list for points
+        #Rajout des point x,y de haut-gauche parce que les chiffres sont detecter a partir de l'ecran
         lines_list.append([(x1+point_hg_x,y1+point_hg_y),(x2+point_hg_x,y2+point_hg_y)])
-     
-    # Save the result image
-    cv.imwrite('detectedLines.png',image)
+
 
 def number_identifier():
     location_1 = pyautogui.locateAllOnScreen('1.png')
@@ -125,7 +105,6 @@ def number_identifier():
     create_grid(location)
 
 def find_point_info():
-    print("Debut find_point")
     point_x_min = 10000
     point_y_min = 10000
     point_x_max = 0
@@ -140,7 +119,6 @@ def find_point_info():
         if y2<point_y_min : point_y_min = y2
         if x2>point_x_max : point_x_max = x2
         if y2>point_y_max : point_y_max = y2
-    print("find point passe")
     dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max)
 
 def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
@@ -159,14 +137,13 @@ def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
 
 def create_grid(location):
     global grid_sudoku
-    print("Debut create_grid")
     i=0
     for loc in location:
         i+=1
         inserer_nombre_grid(loc,i)
         
     
-    print(grid_sudoku)
+    print(numpy.matrix(grid_sudoku))
 
 def inserer_nombre_grid(location,i):
     global sudoku
@@ -176,6 +153,60 @@ def inserer_nombre_grid(location,i):
         column = int(column)
         row = int(row)
         grid_sudoku[row][column] = i
+
+#Copier entierement https://www.youtube.com/watch?v=PZJ5mjQyxR8
+def possible(row, column, number):
+    global grid_sudoku
+    #Is the number appearing in the given row?
+    for i in range(0,9):
+        if grid_sudoku[row][i] == number:
+            return False
+
+    #Is the number appearing in the given column?
+    for i in range(0,9):
+        if grid_sudoku[i][column] == number:
+            return False
+    
+    #Is the number appearing in the given square?
+    x0 = (column // 3) * 3
+    y0 = (row // 3) * 3
+    for i in range(0,3):
+        for j in range(0,3):
+            if grid_sudoku[y0+i][x0+j] == number:return False
+                
+
+    return True
+
+def solve():
+    global grid_sudoku
+    for row in range(0,9):
+        for column in range(0,9):
+            if grid_sudoku[row][column] == 0:
+                for number in range(1,10):
+                    if possible(row, column, number):
+                        grid_sudoku[row][column] = number
+                        solve()
+                        grid_sudoku[row][column] = 0
+
+                return
+      
+    print(numpy.matrix(grid_sudoku))
+    Thread(target = bot_remplir()).start()
+#Fin copie
+
+def bot_remplir():
+    keyboard = Controller()
+    for i in range(0,9):
+        pyautogui.doubleClick(x=(point_hg_x+((cell_range/2))),y=(point_hg_y+((i*cell_range)+(cell_range/2))))
+        for j in range(0,9):
+            value = grid_sudoku[i][j]
+            keyboard.press(str(value))
+            keyboard.release(str(value))
+            time.sleep(0.2)
+            keyboard.press(Key.right)
+            keyboard.release(Key.right)
+            time.sleep(0.2)
+
 
 
 screen = ttk.Label()
