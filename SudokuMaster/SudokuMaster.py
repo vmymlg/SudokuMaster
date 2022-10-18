@@ -1,5 +1,3 @@
-from multiprocessing import Value
-import tabula
 import cv2 as cv
 import pyautogui
 import tkinter as tk
@@ -7,7 +5,6 @@ from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
 from PIL import ImageTk,Image
-from pytesseract import pytesseract
 import numpy
 
 lines_list =[]
@@ -61,9 +58,6 @@ def create_screenshot():
    line_identifier()
 
    
-def extractdatafrompdf():
-    ext = tabula.read_pdf('test.pdf',pages ='1')
-    ext[0].to_csv("sudoku.csv")
 
 #Attention
 #Vol complet de la fonction
@@ -103,6 +97,8 @@ def line_identifier():
     # Save the result image
     cv.imwrite('detectedLines.png',image)
 
+def number_identifier():
+    stop =0
 screen = ttk.Label()
 start_screen = ttk.Button(root,command=start_screenshot,text="Start Screenshot")
 mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
@@ -117,15 +113,7 @@ mouse_button_1.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 mouse_button_2.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
 screen.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5,columnspan = 3)
-path_to_tesseract = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-#Define path to image
-path_to_image = 'test.png'
-#Point tessaract_cmd to tessaract.exe
-pytesseract.tesseract_cmd = path_to_tesseract
-#Open image with PIL
-img = Image.open(path_to_image)
-#Extract text from image
-text = pytesseract.image_to_string('test.png')
+
 print(text)
 def on_press(key):
    global button1
