@@ -1,4 +1,5 @@
 from glob import glob
+import math
 from multiprocessing import Value
 import cv2 as cv
 import pyautogui
@@ -10,7 +11,7 @@ from pynput.keyboard import Key,Controller
 from PIL import ImageTk,Image
 import numpy
 import time
-from threading import Thread
+from threading import Thread, main_thread
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -22,8 +23,8 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
 
-image_path = 'newsudoku'
-vitesse_bot = 0.01
+image_path = 'sudoku'
+vitesse_bot = 0.3
 #Progression Bar
 pro_nombre = False
 pro_point = False
@@ -78,6 +79,9 @@ def start_screenshot():
     global line_list
     lines_list.clear()
     if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
+        if image_path == 'sudoku':
+            time.sleep(2)
+
         restart.config(state='enabled')
         number_identifier()
         
@@ -113,24 +117,24 @@ def line_identifier():
 def number_identifier():
     global pro_nombre
     global image_path
-    location_1 = pyautogui.locateAllOnScreen(image_path+'/1.png')
-    location_2 = pyautogui.locateAllOnScreen(image_path+'/2.png')
-    location_3 = pyautogui.locateAllOnScreen(image_path+'/3.png')
-    location_4 = pyautogui.locateAllOnScreen(image_path+'/4.png')
-    location_5 = pyautogui.locateAllOnScreen(image_path+'/5.png')
-    location_6 = pyautogui.locateAllOnScreen(image_path+'/6.png')
-    location_7 = pyautogui.locateAllOnScreen(image_path+'/7.png')
-    location_8 = pyautogui.locateAllOnScreen(image_path+'/8.png')
-    location_9 = pyautogui.locateAllOnScreen(image_path+'/9.png')
+    location_1 = list(pyautogui.locateAllOnScreen(image_path+'/1.png',confidence=0.90))
+    location_2 = list(pyautogui.locateAllOnScreen(image_path+'/2.png',confidence=0.90))
+    location_3 = list(pyautogui.locateAllOnScreen(image_path+'/3.png',confidence=0.90))
+    location_4 = list(pyautogui.locateAllOnScreen(image_path+'/4.png',confidence=0.90))
+    location_5 = list(pyautogui.locateAllOnScreen(image_path+'/5.png',confidence=0.90))
+    location_6 = list(pyautogui.locateAllOnScreen(image_path+'/6.png',confidence=0.90))
+    location_7 = list(pyautogui.locateAllOnScreen(image_path+'/7.png',confidence=0.90))
+    location_8 = list(pyautogui.locateAllOnScreen(image_path+'/8.png',confidence=0.90))
+    location_9 = list(pyautogui.locateAllOnScreen(image_path+'/9.png',confidence=0.90))
     location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
     pro_nombre = True
     progression()
-    if len(list(location)) == 0:
+    if len(list(location[0]))+len(list(location[1]))+len(list(location[2]))+len(list(location[3]))+len(list(location[4]))+len(list(location[5]))+len(list(location[6]))+len(list(location[7]))+len(list(location[8])) == 0:
         tache.config(text="Nombre du sudoku non repere? Bon site?")
         return
     save_screenshot()
     print(len(lines_list))
-    if len(lines_list) != 40:
+    if image_path == 'newsudoku' and len(lines_list) != 40 or image_path == 'sudoku' and (len(lines_list)<33 or len(lines_list)>40):
         tache.config(text="Trop de lignes assurez d'avoir juste le sudoku")
         return
     find_point_info()
@@ -161,20 +165,13 @@ def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
     global point_bd_x
     global point_bd_y
     global cell_range
-    global old_bd_x
-    global old_bd_y
-    global old_hg_x
-    global old_hg_y
     global pro_point
-    old_bd_x = point_hg_x
-    old_bd_y = point_hg_y
-    old_hg_x = point_bd_x
-    old_hg_y = point_bd_y
     point_hg_x = point_x_min
     point_hg_y = point_y_min
     point_bd_x = point_x_max
     point_bd_y = point_y_max
-    cell_range = (point_x_max-point_x_min)/9
+    print(point_x_min)
+    cell_range = math.floor(point_x_max-point_x_min)/9
     pro_point = True
     progression()
 
@@ -194,13 +191,13 @@ def create_grid(location):
     progression()
 
 def inserer_nombre_grid(location,i):
-    global sudoku
+    global grid_sudoku
     for loc in location :
-        column = ((loc.left-point_hg_x)/cell_range)
-        row = ((loc.top-point_hg_y)/cell_range)
-        column = int(column)
-        row = int(row)
-        grid_sudoku[row][column] = i
+        column = math.floor(((loc.left-point_hg_x)/cell_range))
+        row = math.floor(((loc.top-point_hg_y)/cell_range))
+        print('Row,Column: '+str(row)+" "+str(column))
+        if column<9 and row<9:
+            grid_sudoku[row][column] = i
 #Attention
 #Copier entierement https://www.youtube.com/watch?v=PZJ5mjQyxR8
 def possible(row, column, number):
