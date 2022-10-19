@@ -21,18 +21,23 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
+
+image_path = 'newsudoku'
+vitesse_bot = 0.01
+#Progression Bar
 pro_nombre = False
 pro_point = False
 pro_ligne = False
 pro_grid_create = False
 pro_grid_remplir = False
 pro_bot = False
+
 cell_range = 0
 lines_list =[]
+
 button1 = False
 button2 = False
-start_haut = False
-start_bas = False
+
 point_hg_x = 0
 point_hg_y = 0
 point_bd_x = 0
@@ -41,11 +46,11 @@ old_hg_x = 0
 old_hg_y = 0
 old_bd_x = 0
 old_bd_y = 0
-window_heights = 400
-window_widths = 500
+window_heights = 350
+window_widths = 600
 root = tk.Tk()
 root.title('Sudoku Destroyer')
-root.geometry(str(window_heights)+'x'+str(window_heights)+'+50+50')
+root.geometry(str(window_heights)+'x'+str(window_heights))
 root.resizable(False,False)
 root.iconbitmap('sudoku_icon.ico')
 
@@ -57,13 +62,17 @@ root.columnconfigure(2,weight=3)
 
 def mouse_pointer_1():
     global button1
+    global button2
     global start_haut
     button1 = True
+    button2 = False
     
 def mouse_pointer_2():
+    global button1
     global button2
     global start_bas
     button2 = True  
+    button1 = False
 
 def start_screenshot():
     global line_list
@@ -71,7 +80,8 @@ def start_screenshot():
     if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
         restart.config(state='enabled')
         number_identifier()
-        Thread(target = solve()).start()
+        
+        
             
             
         
@@ -102,21 +112,30 @@ def line_identifier():
 
 def number_identifier():
     global pro_nombre
-    location_1 = pyautogui.locateAllOnScreen('1.png')
-    location_2 = pyautogui.locateAllOnScreen('2.png')
-    location_3 = pyautogui.locateAllOnScreen('3.png')
-    location_4 = pyautogui.locateAllOnScreen('4.png')
-    location_5 = pyautogui.locateAllOnScreen('5.png')
-    location_6 = pyautogui.locateAllOnScreen('6.png')
-    location_7 = pyautogui.locateAllOnScreen('7.png')
-    location_8 = pyautogui.locateAllOnScreen('8.png')
-    location_9 = pyautogui.locateAllOnScreen('9.png')
+    global image_path
+    location_1 = pyautogui.locateAllOnScreen(image_path+'/1.png')
+    location_2 = pyautogui.locateAllOnScreen(image_path+'/2.png')
+    location_3 = pyautogui.locateAllOnScreen(image_path+'/3.png')
+    location_4 = pyautogui.locateAllOnScreen(image_path+'/4.png')
+    location_5 = pyautogui.locateAllOnScreen(image_path+'/5.png')
+    location_6 = pyautogui.locateAllOnScreen(image_path+'/6.png')
+    location_7 = pyautogui.locateAllOnScreen(image_path+'/7.png')
+    location_8 = pyautogui.locateAllOnScreen(image_path+'/8.png')
+    location_9 = pyautogui.locateAllOnScreen(image_path+'/9.png')
     location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
     pro_nombre = True
     progression()
+    if len(list(location)) == 0:
+        tache.config(text="Nombre du sudoku non repere? Bon site?")
+        return
     save_screenshot()
+    print(len(lines_list))
+    if len(lines_list) != 40:
+        tache.config(text="Trop de lignes assurez d'avoir juste le sudoku")
+        return
     find_point_info()
     create_grid(location)
+    Thread(target = solve()).start()
 
 def find_point_info():
     point_x_min = 10000
@@ -225,6 +244,8 @@ def solve():
     pro_grid_remplir = True
     progression()
     Thread(target = bot_remplir()).start()
+
+    
 #Fin copie
 
 def bot_remplir():
@@ -235,10 +256,10 @@ def bot_remplir():
             value = grid_sudoku[i][j]
             keyboard.press(str(value))
             keyboard.release(str(value))
-            time.sleep(0.1)
+            time.sleep(vitesse_bot)
             keyboard.press(Key.right)
             keyboard.release(Key.right)
-            time.sleep(0.1)
+            time.sleep(vitesse_bot)
     pro_bot = True
     progression()
 
@@ -246,10 +267,6 @@ def refresh():
     global grid_sudoku
     global cell_range
     global lines_list
-    global point_hg_x
-    global point_hg_y
-    global point_bd_x
-    global point_bd_y
     grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -261,10 +278,7 @@ def refresh():
                [0,0,0,0,0,0,0,0,0]]
     cell_range = 0
     lines_list =[]
-    point_hg_x = old_hg_x
-    point_hg_y = old_hg_y
-    point_bd_x = old_bd_x
-    point_bd_y = old_bd_y
+
     progress['value'] = 0
     restart.config(state='disabled')
     mouse_button_2.config(state='disabled')
