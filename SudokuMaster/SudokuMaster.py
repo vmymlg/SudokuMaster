@@ -1,3 +1,4 @@
+from gc import callbacks
 from glob import glob
 from multiprocessing import Value
 import cv2 as cv
@@ -10,6 +11,7 @@ from pynput.keyboard import Key,Controller
 from PIL import ImageTk,Image
 import numpy
 import time
+import threading
 from threading import Thread
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
@@ -21,18 +23,17 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
+
 pro_nombre = False
 pro_point = False
 pro_ligne = False
 pro_grid_create = False
 pro_grid_remplir = False
 pro_bot = False
-cell_range = 0
-lines_list =[]
 button1 = False
 button2 = False
-start_haut = False
-start_bas = False
+cell_range = 0
+lines_list =[]
 point_hg_x = 0
 point_hg_y = 0
 point_bd_x = 0
@@ -41,7 +42,7 @@ old_hg_x = 0
 old_hg_y = 0
 old_bd_x = 0
 old_bd_y = 0
-window_heights = 1000
+window_heights = 400
 window_widths = 500
 root = tk.Tk()
 root.title('Sudoku Destroyer')
@@ -57,23 +58,18 @@ root.columnconfigure(2,weight=3)
 
 def mouse_pointer_1():
     global button1
-    global start_haut
-    start_haut = True
     button1 = True
     
 def mouse_pointer_2():
     global button2
-    global start_bas
-    start_bas = True
     button2 = True  
 
 def start_screenshot():
-    global line_list
-    lines_list.clear()
-    if start_haut and start_bas:
         if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
+            restart.config(state='enabled')
+            tache.config(text=("Recherche des points"))
             number_identifier()
-            Thread(target = solve()).start()
+            
             
             
         
@@ -115,11 +111,17 @@ def number_identifier():
     location_8 = pyautogui.locateAllOnScreen('8.png')
     location_9 = pyautogui.locateAllOnScreen('9.png')
     location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
+    location_len = len(list(location_1))+len(list(location_2))+len(list(location_3))+len(list(location_4))+len(list(location_5))+len(list(location_6))+len(list(location_7))+len(list(location_8))+len(list(location_9))
     pro_nombre = True
-    progression()
-    save_screenshot()
-    find_point_info()
-    create_grid(location)
+    print(location_len)
+    if location_len != 0:
+        progression()
+        save_screenshot()
+        find_point_info()
+        create_grid(location)
+        Thread(target = solve()).start()
+    else:
+        tache.config(text="Le sudoku nas pas ete reperer veuillez vous assurer des coordonnees")
 
 def find_point_info():
     point_x_min = 10000
@@ -268,13 +270,14 @@ def refresh():
     point_bd_x = old_bd_x
     point_bd_y = old_bd_y
     progress['value'] = 0
+    restart.config(state='disabled')
 
 tache = ttk.Label(root,text="Veuillez entrer les coordonnees")
 progress = ttk.Progressbar(root,orient=HORIZONTAL,length=500,mode = 'determinate')
 start_screen = ttk.Button(root,command=start_screenshot,text="Start Botting",state = 'disabled')
 mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
 mouse_button_2 = ttk.Button(root,command=mouse_pointer_2,text="Bas-Droit",state='disabled')
-restart = ttk.Button(root,command=refresh,text="Redo")
+restart = ttk.Button(root,command=refresh,text="Redo",state='disabled')
 label_pointer1 = ttk.Label(root,text="Pointeur haut-gauche tableau")
 label_pointer2 = ttk.Label(root,text="Pointeur bas-droit tableau")
 
@@ -288,24 +291,31 @@ start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
 progress.grid(column=0, row=3, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 
 def progression():
+    timer = threading.Timer(0.2,callbacks)
+    timer.start
     if pro_bot:
         progress['value'] = 100
         tache.config(text=("Done"))
         progress.update_idletasks()
     elif pro_grid_remplir:
         progress['value'] = 76
+        tache.config(text=("Bot en action Toucher a rien!"))
         progress.update_idletasks()
     elif pro_grid_create:
         progress['value'] = 62
+        tache.config(text=("Solving"))
         progress.update_idletasks()
     elif pro_ligne:
         progress['value'] = 52
+        tache.config(text=("Creation du grid"))
         progress.update_idletasks()
     elif pro_point:
         progress['value'] = 32
+        tache.config(text=("Recherche des lignes"))
         progress.update_idletasks()
     elif pro_nombre:
         progress['value'] = 12
+        tache.config(text=("Recherche des points du tableau"))
         progress.update_idletasks()
     
 
@@ -328,6 +338,7 @@ def on_press(key):
        point_hg_y = mouse_position[1]
        label_pointer1.config(text=( "Coordonnees:"+str(point_hg_x)+","+str(point_hg_y)))
        button1 = False
+       mouse_button_2.config(state='enabled')
     
    elif button2:
        mouse_position = pyautogui.position()
@@ -335,6 +346,8 @@ def on_press(key):
        point_bd_y = mouse_position[1]
        label_pointer2.config(text = "Coordonnees:"+str(point_bd_x)+","+str(point_bd_y))
        button2 = False
+       start_screen.config(state='enabled')
+       tache.config(text=("Pret a lancer!"))
        
 
 
