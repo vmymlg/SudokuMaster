@@ -1,4 +1,3 @@
-from gc import callbacks
 from glob import glob
 from multiprocessing import Value
 import cv2 as cv
@@ -11,7 +10,6 @@ from pynput.keyboard import Key,Controller
 from PIL import ImageTk,Image
 import numpy
 import time
-import threading
 from threading import Thread
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
@@ -23,17 +21,18 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
-
 pro_nombre = False
 pro_point = False
 pro_ligne = False
 pro_grid_create = False
 pro_grid_remplir = False
 pro_bot = False
-button1 = False
-button2 = False
 cell_range = 0
 lines_list =[]
+button1 = False
+button2 = False
+start_haut = False
+start_bas = False
 point_hg_x = 0
 point_hg_y = 0
 point_bd_x = 0
@@ -58,25 +57,27 @@ root.columnconfigure(2,weight=3)
 
 def mouse_pointer_1():
     global button1
+    global start_haut
     button1 = True
     
 def mouse_pointer_2():
     global button2
+    global start_bas
     button2 = True  
 
 def start_screenshot():
-        if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
-            restart.config(state='enabled')
-            tache.config(text=("Recherche des points"))
-            number_identifier()
-            
+    global line_list
+    lines_list.clear()
+    if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
+        restart.config(state='enabled')
+        number_identifier()
+        Thread(target = solve()).start()
             
             
         
 def save_screenshot():
    image = pyautogui.screenshot(region=(point_hg_x,point_hg_y,point_bd_x-point_hg_x,point_bd_y-point_hg_y))
    image.save('test.png')
-   image = ImageTk.PhotoImage(Image.open('test.png'))
    line_identifier()
 
    
@@ -111,17 +112,11 @@ def number_identifier():
     location_8 = pyautogui.locateAllOnScreen('8.png')
     location_9 = pyautogui.locateAllOnScreen('9.png')
     location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
-    location_len = len(list(location_1))+len(list(location_2))+len(list(location_3))+len(list(location_4))+len(list(location_5))+len(list(location_6))+len(list(location_7))+len(list(location_8))+len(list(location_9))
     pro_nombre = True
-    print(location_len)
-    if location_len != 0:
-        progression()
-        save_screenshot()
-        find_point_info()
-        create_grid(location)
-        Thread(target = solve()).start()
-    else:
-        tache.config(text="Le sudoku nas pas ete reperer veuillez vous assurer des coordonnees")
+    progression()
+    save_screenshot()
+    find_point_info()
+    create_grid(location)
 
 def find_point_info():
     point_x_min = 10000
@@ -223,6 +218,7 @@ def solve():
                         grid_sudoku[row][column] = 0
 
                 return
+            
       
     print(numpy.matrix(grid_sudoku))
     global pro_grid_remplir
@@ -271,6 +267,11 @@ def refresh():
     point_bd_y = old_bd_y
     progress['value'] = 0
     restart.config(state='disabled')
+    mouse_button_2.config(state='disabled')
+    start_screen.config(state='disabled')
+    tache.config(text="Veuillez entrer les coordonnees")
+    label_pointer1.config(text="Haut-Gauche")
+    label_pointer2.config(text="Bas-Droit")
 
 tache = ttk.Label(root,text="Veuillez entrer les coordonnees")
 progress = ttk.Progressbar(root,orient=HORIZONTAL,length=500,mode = 'determinate')
@@ -291,8 +292,6 @@ start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
 progress.grid(column=0, row=3, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 
 def progression():
-    timer = threading.Timer(0.2,callbacks)
-    timer.start
     if pro_bot:
         progress['value'] = 100
         tache.config(text=("Done"))
@@ -337,18 +336,17 @@ def on_press(key):
        point_hg_x = mouse_position[0]
        point_hg_y = mouse_position[1]
        label_pointer1.config(text=( "Coordonnees:"+str(point_hg_x)+","+str(point_hg_y)))
-       button1 = False
        mouse_button_2.config(state='enabled')
+       button1 = False
     
    elif button2:
        mouse_position = pyautogui.position()
        point_bd_x = mouse_position[0]
        point_bd_y = mouse_position[1]
        label_pointer2.config(text = "Coordonnees:"+str(point_bd_x)+","+str(point_bd_y))
-       button2 = False
        start_screen.config(state='enabled')
-       tache.config(text=("Pret a lancer!"))
-       
+       button2 = False
+       tache.config(text=("Pret a lancer!"))       
 
 
 
