@@ -1,3 +1,5 @@
+from glob import glob
+from multiprocessing import Value
 import cv2 as cv
 import pyautogui
 import tkinter as tk
@@ -19,6 +21,12 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
+pro_nombre = False
+pro_point = False
+pro_ligne = False
+pro_grid_create = False
+pro_grid_remplir = False
+pro_bot = False
 cell_range = 0
 lines_list =[]
 button1 = False
@@ -29,6 +37,10 @@ point_hg_x = 0
 point_hg_y = 0
 point_bd_x = 0
 point_bd_y = 0
+old_hg_x = 0
+old_hg_y = 0
+old_bd_x = 0
+old_bd_y = 0
 window_heights = 1000
 window_widths = 500
 root = tk.Tk()
@@ -61,7 +73,7 @@ def start_screenshot():
     if start_haut and start_bas:
         if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
             number_identifier()
-            solve()
+            Thread(target = solve()).start()
             
             
         
@@ -69,7 +81,6 @@ def save_screenshot():
    image = pyautogui.screenshot(region=(point_hg_x,point_hg_y,point_bd_x-point_hg_x,point_bd_y-point_hg_y))
    image.save('test.png')
    image = ImageTk.PhotoImage(Image.open('test.png'))
-   screen.config(image=image)
    line_identifier()
 
    
@@ -79,6 +90,7 @@ def save_screenshot():
 #https://www.geeksforgeeks.org/line-detection-python-opencv-houghline-method/
 def line_identifier():
     global lines_list
+    global pro_ligne
     image = cv.imread('test.png')
     bordure = cv.Canny(image,100,200,apertureSize=3)
     lignes = cv.HoughLinesP(bordure, 1, numpy.pi/180, threshold=100, minLineLength=50, maxLineGap=100)
@@ -87,9 +99,12 @@ def line_identifier():
         x1,y1,x2,y2=points[0]
         #Rajout des point x,y de haut-gauche parce que les chiffres sont detecter a partir de l'ecran
         lines_list.append([(x1+point_hg_x,y1+point_hg_y),(x2+point_hg_x,y2+point_hg_y)])
+    pro_ligne = True
+    progression()
 
 
 def number_identifier():
+    global pro_nombre
     location_1 = pyautogui.locateAllOnScreen('1.png')
     location_2 = pyautogui.locateAllOnScreen('2.png')
     location_3 = pyautogui.locateAllOnScreen('3.png')
@@ -100,6 +115,8 @@ def number_identifier():
     location_8 = pyautogui.locateAllOnScreen('8.png')
     location_9 = pyautogui.locateAllOnScreen('9.png')
     location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
+    pro_nombre = True
+    progression()
     save_screenshot()
     find_point_info()
     create_grid(location)
@@ -120,6 +137,7 @@ def find_point_info():
         if x2>point_x_max : point_x_max = x2
         if y2>point_y_max : point_y_max = y2
     dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max)
+    
 
 def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
     global point_hg_x
@@ -127,16 +145,28 @@ def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
     global point_bd_x
     global point_bd_y
     global cell_range
+    global old_bd_x
+    global old_bd_y
+    global old_hg_x
+    global old_hg_y
+    global pro_point
+    old_bd_x = point_hg_x
+    old_bd_y = point_hg_y
+    old_hg_x = point_bd_x
+    old_hg_y = point_bd_y
     point_hg_x = point_x_min
     point_hg_y = point_y_min
     point_bd_x = point_x_max
     point_bd_y = point_y_max
     cell_range = (point_x_max-point_x_min)/9
+    pro_point = True
+    progression()
 
 
 
 def create_grid(location):
     global grid_sudoku
+    global pro_grid_create
     i=0
     for loc in location:
         i+=1
@@ -144,6 +174,8 @@ def create_grid(location):
         
     
     print(numpy.matrix(grid_sudoku))
+    pro_grid_create = True
+    progression()
 
 def inserer_nombre_grid(location,i):
     global sudoku
@@ -153,7 +185,7 @@ def inserer_nombre_grid(location,i):
         column = int(column)
         row = int(row)
         grid_sudoku[row][column] = i
-
+#Attention
 #Copier entierement https://www.youtube.com/watch?v=PZJ5mjQyxR8
 def possible(row, column, number):
     global grid_sudoku
@@ -191,6 +223,9 @@ def solve():
                 return
       
     print(numpy.matrix(grid_sudoku))
+    global pro_grid_remplir
+    pro_grid_remplir = True
+    progression()
     Thread(target = bot_remplir()).start()
 #Fin copie
 
@@ -202,27 +237,80 @@ def bot_remplir():
             value = grid_sudoku[i][j]
             keyboard.press(str(value))
             keyboard.release(str(value))
-            time.sleep(0.2)
+            time.sleep(0.1)
             keyboard.press(Key.right)
             keyboard.release(Key.right)
-            time.sleep(0.2)
+            time.sleep(0.1)
+    pro_bot = True
+    progression()
 
+def refresh():
+    global grid_sudoku
+    global cell_range
+    global lines_list
+    global point_hg_x
+    global point_hg_y
+    global point_bd_x
+    global point_bd_y
+    grid_sudoku = [[0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0],
+               [0,0,0,0,0,0,0,0,0]]
+    cell_range = 0
+    lines_list =[]
+    point_hg_x = old_hg_x
+    point_hg_y = old_hg_y
+    point_bd_x = old_bd_x
+    point_bd_y = old_bd_y
+    progress['value'] = 0
 
-
-screen = ttk.Label()
-start_screen = ttk.Button(root,command=start_screenshot,text="Start Screenshot")
+tache = ttk.Label(root,text="Veuillez entrer les coordonnees")
+progress = ttk.Progressbar(root,orient=HORIZONTAL,length=500,mode = 'determinate')
+start_screen = ttk.Button(root,command=start_screenshot,text="Start Botting",state = 'disabled')
 mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
-mouse_button_2 = ttk.Button(root,command=mouse_pointer_2,text="Bas-Droit")
+mouse_button_2 = ttk.Button(root,command=mouse_pointer_2,text="Bas-Droit",state='disabled')
+restart = ttk.Button(root,command=refresh,text="Redo")
 label_pointer1 = ttk.Label(root,text="Pointeur haut-gauche tableau")
 label_pointer2 = ttk.Label(root,text="Pointeur bas-droit tableau")
 
-
+tache.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 label_pointer1.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
 label_pointer2.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 mouse_button_1.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 mouse_button_2.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
+restart.grid(column=2, row=1, sticky=tk.W, padx=5, pady=5)
 start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
-screen.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5,columnspan = 3)
+progress.grid(column=0, row=3, sticky=tk.W, padx=5, pady=5,columnspan = 3)
+
+def progression():
+    if pro_bot:
+        progress['value'] = 100
+        tache.config(text=("Done"))
+        progress.update_idletasks()
+    elif pro_grid_remplir:
+        progress['value'] = 76
+        progress.update_idletasks()
+    elif pro_grid_create:
+        progress['value'] = 62
+        progress.update_idletasks()
+    elif pro_ligne:
+        progress['value'] = 52
+        progress.update_idletasks()
+    elif pro_point:
+        progress['value'] = 32
+        progress.update_idletasks()
+    elif pro_nombre:
+        progress['value'] = 12
+        progress.update_idletasks()
+    
+
+
+
 
 def on_press(key):
    global button1
