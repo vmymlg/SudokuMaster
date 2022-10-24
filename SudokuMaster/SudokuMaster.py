@@ -1,3 +1,4 @@
+from concurrent.futures import thread
 from glob import glob
 import math
 from multiprocessing import Value
@@ -12,6 +13,7 @@ from PIL import ImageTk,Image
 import numpy
 import time
 from threading import Thread, main_thread
+import asyncio
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -22,9 +24,9 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
-
-image_path = 'sudoku'
-vitesse_bot = 0.3
+solution = grid_sudoku
+image_path = 'newsudoku'
+vitesse_bot = 0.01
 #Progression Bar
 pro_nombre = False
 pro_point = False
@@ -133,14 +135,17 @@ def number_identifier():
         tache.config(text="Nombre du sudoku non repere? Bon site?")
         return
     save_screenshot()
-    print(len(lines_list))
     if image_path == 'newsudoku' and len(lines_list) != 40 or image_path == 'sudoku' and (len(lines_list)<33 or len(lines_list)>40):
         tache.config(text="Trop de lignes assurez d'avoir juste le sudoku")
         return
     find_point_info()
     create_grid(location)
-    Thread(target = solve()).start()
-
+    start()
+def start():
+    thread = Thread(target = solve())
+    thread.start()
+    thread.join()
+    print("Done!")
 def find_point_info():
     point_x_min = 10000
     point_y_min = 10000
@@ -170,7 +175,6 @@ def dimension_cell(point_x_min,point_x_max,point_y_min,point_y_max):
     point_hg_y = point_y_min
     point_bd_x = point_x_max
     point_bd_y = point_y_max
-    print(point_x_min)
     cell_range = math.floor(point_x_max-point_x_min)/9
     pro_point = True
     progression()
@@ -195,7 +199,6 @@ def inserer_nombre_grid(location,i):
     for loc in location :
         column = math.floor(((loc.left-point_hg_x)/cell_range))
         row = math.floor(((loc.top-point_hg_y)/cell_range))
-        print('Row,Column: '+str(row)+" "+str(column))
         if column<9 and row<9:
             grid_sudoku[row][column] = i
 #Attention
@@ -224,6 +227,7 @@ def possible(row, column, number):
 
 def solve():
     global grid_sudoku
+    global solution
     for row in range(0,9):
         for column in range(0,9):
             if grid_sudoku[row][column] == 0:
@@ -235,23 +239,32 @@ def solve():
 
                 return
             
-      
+    
     print(numpy.matrix(grid_sudoku))
+    if '0' in grid_sudoku:
+        return
+        print("0 found")
+    else:
+        solution = grid_sudoku
+        print("0 not found")
+    print(numpy.matrix(solution))
     global pro_grid_remplir
     pro_grid_remplir = True
     progression()
     Thread(target = bot_remplir()).start()
-
     
+
 #Fin copie
 
 def bot_remplir():
+    global solution
+    print(numpy.matrix(solution))
     keyboard = Controller()
     global pro_bot
     for i in range(0,9):
         pyautogui.doubleClick(x=(point_hg_x+((cell_range/2))),y=(point_hg_y+((i*cell_range)+(cell_range/2))))
         for j in range(0,9):
-            value = grid_sudoku[i][j]
+            value = solution[i][j]
             keyboard.press(str(value))
             keyboard.release(str(value))
             time.sleep(vitesse_bot)
@@ -265,6 +278,7 @@ def refresh():
     global grid_sudoku
     global cell_range
     global lines_list
+    global solution
     grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -274,6 +288,7 @@ def refresh():
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
+    solution = grid_sudoku
     cell_range = 0
     lines_list =[]
 
