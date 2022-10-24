@@ -45,10 +45,7 @@ point_hg_x = 0
 point_hg_y = 0
 point_bd_x = 0
 point_bd_y = 0
-old_hg_x = 0
-old_hg_y = 0
-old_bd_x = 0
-old_bd_y = 0
+
 window_heights = 350
 window_widths = 600
 root = tk.Tk()
@@ -66,14 +63,12 @@ root.columnconfigure(2,weight=3)
 def mouse_pointer_1():
     global button1
     global button2
-    global start_haut
     button1 = True
     button2 = False
     
 def mouse_pointer_2():
     global button1
     global button2
-    global start_bas
     button2 = True  
     button1 = False
 
@@ -83,20 +78,16 @@ def start_screenshot():
     if point_hg_x<point_bd_x and point_hg_y<point_bd_y:
         if image_path == 'sudoku':
             time.sleep(2)
-
         restart.config(state='enabled')
-        number_identifier()
+        asyncio.run(start())
         
-        
-            
-            
+
         
 def save_screenshot():
    image = pyautogui.screenshot(region=(point_hg_x,point_hg_y,point_bd_x-point_hg_x,point_bd_y-point_hg_y))
    image.save('test.png')
-   line_identifier()
-
    
+
 
 #Attention
 #Inspiration:
@@ -131,21 +122,30 @@ def number_identifier():
     location = [location_1,location_2,location_3,location_4,location_5,location_6,location_7,location_8,location_9]
     pro_nombre = True
     progression()
+    return location
+
+
+async def start():
+    location = number_identifier()
     if len(list(location[0]))+len(list(location[1]))+len(list(location[2]))+len(list(location[3]))+len(list(location[4]))+len(list(location[5]))+len(list(location[6]))+len(list(location[7]))+len(list(location[8])) == 0:
         tache.config(text="Nombre du sudoku non repere? Bon site?")
         return
     save_screenshot()
+    line_identifier()
     if image_path == 'newsudoku' and len(lines_list) != 40 or image_path == 'sudoku' and (len(lines_list)<33 or len(lines_list)>40):
         tache.config(text="Trop de lignes assurez d'avoir juste le sudoku")
         return
     find_point_info()
     create_grid(location)
-    start()
-def start():
-    thread = Thread(target = solve())
-    thread.start()
-    thread.join()
+    print('creation task solve')
+    task_1 = asyncio.create_task(solve())
+    await task_1
+    print('creation task bot remplir')
+    task_2 = asyncio.create_task(bot_remplir())
+    print('await bot remplir')
+    await task_2
     print("Done!")
+
 def find_point_info():
     point_x_min = 10000
     point_y_min = 10000
@@ -225,7 +225,7 @@ def possible(row, column, number):
 
     return True
 
-def solve():
+async def solve():
     global grid_sudoku
     global solution
     for row in range(0,9):
@@ -234,7 +234,7 @@ def solve():
                 for number in range(1,10):
                     if possible(row, column, number):
                         grid_sudoku[row][column] = number
-                        solve()
+                        await solve()
                         grid_sudoku[row][column] = 0
 
                 return
@@ -242,8 +242,9 @@ def solve():
     
     print(numpy.matrix(grid_sudoku))
     if '0' in grid_sudoku:
-        return
         print("0 found")
+        return
+        
     else:
         solution = grid_sudoku
         print("0 not found")
@@ -251,12 +252,11 @@ def solve():
     global pro_grid_remplir
     pro_grid_remplir = True
     progression()
-    Thread(target = bot_remplir()).start()
-    
+
 
 #Fin copie
 
-def bot_remplir():
+async def bot_remplir():
     global solution
     print(numpy.matrix(solution))
     keyboard = Controller()
