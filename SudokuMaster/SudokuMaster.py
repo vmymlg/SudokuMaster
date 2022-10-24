@@ -247,6 +247,7 @@ def solve():
 
 def bot_remplir():
     keyboard = Controller()
+    global pro_bot
     for i in range(0,9):
         pyautogui.doubleClick(x=(point_hg_x+((cell_range/2))),y=(point_hg_y+((i*cell_range)+(cell_range/2))))
         for j in range(0,9):
