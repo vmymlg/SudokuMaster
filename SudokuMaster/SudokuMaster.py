@@ -79,7 +79,7 @@ def start_screenshot():
         if image_path == 'sudoku':
             time.sleep(2)
         restart.config(state='enabled')
-        asyncio.run(start())
+        Thread(target=start()).start()
         
 
         
@@ -125,7 +125,7 @@ def number_identifier():
     return location
 
 
-async def start():
+def start():
     location = number_identifier()
     if len(list(location[0]))+len(list(location[1]))+len(list(location[2]))+len(list(location[3]))+len(list(location[4]))+len(list(location[5]))+len(list(location[6]))+len(list(location[7]))+len(list(location[8])) == 0:
         tache.config(text="Nombre du sudoku non repere? Bon site?")
@@ -137,14 +137,9 @@ async def start():
         return
     find_point_info()
     create_grid(location)
-    print('creation task solve')
-    task_1 = asyncio.create_task(solve())
-    await task_1
-    print('creation task bot remplir')
-    task_2 = asyncio.create_task(bot_remplir())
-    print('await bot remplir')
-    await task_2
-    print("Done!")
+    solve()
+    
+
 
 def find_point_info():
     point_x_min = 10000
@@ -225,22 +220,21 @@ def possible(row, column, number):
 
     return True
 
-async def solve():
+def solve():
     global grid_sudoku
     global solution
+    global pro_grid_remplir
     for row in range(0,9):
         for column in range(0,9):
             if grid_sudoku[row][column] == 0:
                 for number in range(1,10):
                     if possible(row, column, number):
                         grid_sudoku[row][column] = number
-                        await solve()
+                        solve()
                         grid_sudoku[row][column] = 0
 
                 return
             
-    
-    print(numpy.matrix(grid_sudoku))
     if '0' in grid_sudoku:
         print("0 found")
         return
@@ -249,16 +243,16 @@ async def solve():
         solution = grid_sudoku
         print("0 not found")
     print(numpy.matrix(solution))
-    global pro_grid_remplir
     pro_grid_remplir = True
     progression()
+    Thread(target=bot_remplir()).start()
+    
 
 
 #Fin copie
 
-async def bot_remplir():
+def bot_remplir():
     global solution
-    print(numpy.matrix(solution))
     keyboard = Controller()
     global pro_bot
     for i in range(0,9):
@@ -279,6 +273,12 @@ def refresh():
     global cell_range
     global lines_list
     global solution
+    global pro_nombre
+    global pro_point
+    global pro_ligne
+    global pro_grid_create
+    global pro_grid_remplir
+    global pro_bot
     grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -291,6 +291,12 @@ def refresh():
     solution = grid_sudoku
     cell_range = 0
     lines_list =[]
+    pro_nombre = False
+    pro_point = False
+    pro_ligne = False
+    pro_grid_create = False
+    pro_grid_remplir = False
+    pro_bot = False
 
     progress['value'] = 0
     restart.config(state='disabled')
