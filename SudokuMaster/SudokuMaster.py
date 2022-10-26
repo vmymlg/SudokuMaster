@@ -1,7 +1,7 @@
-from concurrent.futures import thread
-from glob import glob
 import math
 from multiprocessing import Value
+from select import select
+from turtle import onclick
 import cv2 as cv
 import pyautogui
 import tkinter as tk
@@ -9,11 +9,10 @@ from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
 from pynput.keyboard import Key,Controller
-from PIL import ImageTk,Image
+from PIL import Image
 import numpy
 import time
 from threading import Thread, main_thread
-import asyncio
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -26,7 +25,7 @@ grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0]]
 solution = grid_sudoku
 image_path = 'newsudoku'
-vitesse_bot = 0.01
+vitesse_bot = 1
 #Progression Bar
 pro_nombre = False
 pro_point = False
@@ -137,7 +136,7 @@ def start():
         return
     find_point_info()
     create_grid(location)
-    solve()
+    Thread(target = solve()).start()
     
 
 
@@ -267,7 +266,10 @@ def bot_remplir():
             time.sleep(vitesse_bot)
     pro_bot = True
     progression()
-
+def change_vitesse():
+    global vitesse_bot
+    vitesse_bot = vitesse.get()
+    print(vitesse_bot)
 def refresh():
     global grid_sudoku
     global cell_range
@@ -313,7 +315,15 @@ mouse_button_1 = ttk.Button(root,command=mouse_pointer_1,text="Haut-Gauche")
 mouse_button_2 = ttk.Button(root,command=mouse_pointer_2,text="Bas-Droit",state='disabled')
 restart = ttk.Button(root,command=refresh,text="Redo",state='disabled')
 label_pointer1 = ttk.Label(root,text="Pointeur haut-gauche tableau")
+
+vitesse = tk.DoubleVar()
 label_pointer2 = ttk.Label(root,text="Pointeur bas-droit tableau")
+label_vitesse = ttk.Label(root,text="Vitesse du bot:")
+r_vit_min = ttk.Radiobutton(root,text='Lent',variable = vitesse, value = 1,command = change_vitesse)
+r_vit_med = ttk.Radiobutton(root,text='Moyen',variable = vitesse, value=0.5,command = change_vitesse)
+r_vit_max = ttk.Radiobutton(root,text='Hell',variable = vitesse, value=0.01,command = change_vitesse)
+vitesse.set(1)
+
 
 tache.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 label_pointer1.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
@@ -322,7 +332,11 @@ mouse_button_1.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 mouse_button_2.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 restart.grid(column=2, row=1, sticky=tk.W, padx=5, pady=5)
 start_screen.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
-progress.grid(column=0, row=3, sticky=tk.W, padx=5, pady=5,columnspan = 3)
+label_vitesse.grid(column=0, row=3, sticky=tk.W, padx=5, pady=5)
+r_vit_min.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
+r_vit_med.grid(column=2, row=3, sticky=tk.W, padx=5, pady=5)
+r_vit_max.grid(column=3, row=3, sticky=tk.W, padx=5, pady=5)
+progress.grid(column=0, row=5, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 
 def progression():
     if pro_bot:
