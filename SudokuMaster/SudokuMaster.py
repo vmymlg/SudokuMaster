@@ -308,6 +308,32 @@ def refresh():
     label_pointer1.config(text="Haut-Gauche")
     label_pointer2.config(text="Bas-Droit")
 
+def change_site_Ny():
+    global image_path
+    image_path = "newsudoku"
+    print(image_path)
+def change_site_sudoku():
+    global image_path
+    image_path = "sudoku"
+    print(image_path)
+def information():
+    print("Information")
+def tuto():
+    print("tuto")
+
+
+menubar = Menu(root)
+sitemenu = Menu(menubar,tearoff=0)
+infomenu = Menu(menubar, tearoff=0)
+sitemenu.add_command(label = "New York Times Sudoku",command = change_site_Ny)
+sitemenu.add_command(label = "1Sudoku.com",command = change_site_sudoku)
+menubar.add_cascade(label="Site",menu=sitemenu)
+infomenu.add_command(label = "Information",command = information)
+infomenu.add_command(label = "Tutoriel",command = tuto)
+menubar.add_cascade(label="?",menu=infomenu)
+root.config(menu=menubar)
+
+
 tache = ttk.Label(root,text="Veuillez entrer les coordonnees")
 progress = ttk.Progressbar(root,orient=HORIZONTAL,length=500,mode = 'determinate')
 start_screen = ttk.Button(root,command=start_screenshot,text="Start Botting",state = 'disabled')
@@ -320,7 +346,7 @@ vitesse = tk.DoubleVar()
 label_pointer2 = ttk.Label(root,text="Pointeur bas-droit tableau")
 label_vitesse = ttk.Label(root,text="Vitesse du bot:")
 r_vit_min = ttk.Radiobutton(root,text='Lent',variable = vitesse, value = 1,command = change_vitesse)
-r_vit_med = ttk.Radiobutton(root,text='Moyen',variable = vitesse, value=0.5,command = change_vitesse)
+r_vit_med = ttk.Radiobutton(root,text='Moyen',variable = vitesse, value=0.25,command = change_vitesse)
 r_vit_max = ttk.Radiobutton(root,text='Hell',variable = vitesse, value=0.01,command = change_vitesse)
 vitesse.set(1)
 
@@ -364,8 +390,6 @@ def progression():
         tache.config(text=("Recherche des points du tableau"))
         progress.update_idletasks()
     
-
-
 
 
 def on_press(key):
