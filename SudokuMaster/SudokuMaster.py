@@ -1,6 +1,6 @@
 import math
-from multiprocessing import Value
 from select import select
+from tkinter import messagebox
 from turtle import onclick
 import cv2 as cv
 import pyautogui
@@ -9,10 +9,13 @@ from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
 from pynput.keyboard import Key,Controller
-from PIL import Image
+from PIL import ImageTk,Image
 import numpy
 import time
 from threading import Thread, main_thread
+from matplotlib import image, pyplot
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 grid_sudoku = [[0,0,0,0,0,0,0,0,0],
                [0,0,0,0,0,0,0,0,0],
@@ -45,7 +48,7 @@ point_hg_y = 0
 point_bd_x = 0
 point_bd_y = 0
 
-window_heights = 350
+window_heights = 400
 window_widths = 600
 root = tk.Tk()
 root.title('Sudoku Destroyer')
@@ -79,6 +82,9 @@ def start_screenshot():
             time.sleep(2)
         restart.config(state='enabled')
         Thread(target=start()).start()
+    else:
+        tache.config(text="Reverifier les coordonnees")
+
         
 
         
@@ -131,7 +137,8 @@ def start():
         return
     save_screenshot()
     line_identifier()
-    if image_path == 'newsudoku' and len(lines_list) != 40 or image_path == 'sudoku' and (len(lines_list)<33 or len(lines_list)>40):
+    print(len(lines_list))
+    if image_path == 'newsudoku' and len(lines_list) != 40 or image_path == 'sudoku' and len(lines_list)!=39:
         tache.config(text="Trop de lignes assurez d'avoir juste le sudoku")
         return
     find_point_info()
@@ -317,9 +324,14 @@ def change_site_sudoku():
     image_path = "sudoku"
     print(image_path)
 def information():
-    print("Information")
+    messagebox.showinfo(title="Information", message="Projet fait par : Yann Montminy \n Lien Site Sudoku: \n https://www.nytimes.com/puzzles/sudoku/easy \n https://1sudoku.com/fr/sudoku/facile \n Source et reference: \n https://www.youtube.com/watch?v=PZJ5mjQyxR8 \n https://www.geeksforgeeks.org/line-detection-python-opencv-houghline-method/")
+
 def tuto():
-    print("tuto")
+   img = mpimg.imread('tuto_image.png')
+   imgplot = plt.imshow(img)
+   plt.show()
+
+    
 
 
 menubar = Menu(root)
@@ -362,8 +374,7 @@ label_vitesse.grid(column=0, row=3, sticky=tk.W, padx=5, pady=5)
 r_vit_min.grid(column=1, row=3, sticky=tk.W, padx=5, pady=5)
 r_vit_med.grid(column=2, row=3, sticky=tk.W, padx=5, pady=5)
 r_vit_max.grid(column=3, row=3, sticky=tk.W, padx=5, pady=5)
-progress.grid(column=0, row=5, sticky=tk.W, padx=5, pady=5,columnspan = 3)
-
+progress.grid(column=0, row=4, sticky=tk.W, padx=5, pady=5,columnspan = 3)
 def progression():
     if pro_bot:
         progress['value'] = 100
@@ -399,10 +410,11 @@ def on_press(key):
    global point_hg_y
    global point_bd_x
    global point_bd_y
+   print(key)
    if key == keyboard.Key.esc:
        listener.stop()
        root.destroy()
-   if button1:
+   if button1 and key == keyboard.Key.ctrl_l:
        mouse_position = pyautogui.position()
        point_hg_x = mouse_position[0]
        point_hg_y = mouse_position[1]
@@ -410,7 +422,7 @@ def on_press(key):
        mouse_button_2.config(state='enabled')
        button1 = False
     
-   elif button2:
+   elif button2 and key == keyboard.Key.ctrl_l:
        mouse_position = pyautogui.position()
        point_bd_x = mouse_position[0]
        point_bd_y = mouse_position[1]
