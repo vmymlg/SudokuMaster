@@ -232,19 +232,25 @@ def possible(row, column, number):
 
     return True
 #fonction recursive qui s'appelle par elle-meme
+
 def solve():
     global grid_sudoku
     global solution
     global pro_grid_remplir
+    #boucle le tableau avec 2 boucle for
     for row in range(0,9):
         for column in range(0,9):
+            #Verifie si la case est égal à zéro donc aucun chiffre à l'intérieur
             if grid_sudoku[row][column] == 0:
+                #Itère les nombres possibles (1-9)
                 for number in range(1,10):
+                    #Verifie la possibilité de placer le nombre possibles itérer plus haut
                     if possible(row, column, number):
+                        #égal le nombre possible au tableau et se rappelle elle-meme pour passer au suivant
                         grid_sudoku[row][column] = number
                         solve()
                         grid_sudoku[row][column] = 0
-
+                #Si il n'y a aucun chiffre possible il retourne et égal sont chiffres précedent a 0 et continue avec le prochain nombre possible
                 return
             
     if '0' in grid_sudoku:
@@ -258,11 +264,10 @@ def solve():
     pro_grid_remplir = True
     progression()
     Thread(target=bot_remplir()).start()
-    
-
 
 #Fin copie
 
+#Remplit le sudoku sur le site internet
 def bot_remplir():
     global solution
     keyboard = Controller()
@@ -279,10 +284,14 @@ def bot_remplir():
             time.sleep(vitesse_bot)
     pro_bot = True
     progression()
+
+#Change la vitesse du bot
 def change_vitesse():
     global vitesse_bot
     vitesse_bot = vitesse.get()
     print(vitesse_bot)
+
+#bouton refresh qui reset pour recommencer avec un autre sudoku
 def refresh():
     global grid_sudoku
     global cell_range
