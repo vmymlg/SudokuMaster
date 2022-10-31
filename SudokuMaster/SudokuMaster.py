@@ -1,7 +1,5 @@
 import math
-from select import select
 from tkinter import messagebox
-from turtle import onclick
 import cv2 as cv
 import pyautogui
 import tkinter as tk
@@ -9,10 +7,9 @@ from tkinter import *
 from tkinter import ttk
 from pynput import keyboard
 from pynput.keyboard import Key,Controller
-from PIL import ImageTk,Image
 import numpy
 import time
-from threading import Thread, main_thread
+from threading import Thread
 from matplotlib import image as mpimg, pyplot as plt
 
 #Les variables globales sont deconseillers mais on apprends en pratiquant
